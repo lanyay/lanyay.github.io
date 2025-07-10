@@ -78,9 +78,6 @@
             <a href="#query" class="bg-white text-primary font-semibold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-custom">
               立即查询
             </a>
-            <a href="#help" class="bg-transparent border-2 border-white text-white font-semibold py-3 px-8 rounded-lg hover:bg-white/10 transition-custom">
-              了解更多
-            </a>
           </div>
         </div>
         <div class="md:w-1/2 flex justify-center">
@@ -92,7 +89,7 @@
     </section>
 
     <!-- 查询区域 -->
-<section id="query" class="py-16 bg-white">
+    <section id="query" class="py-16 bg-white">
       <div class="container mx-auto px-4">
         <div class="text-center mb-12">
           <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-gray-800 mb-4">成绩查询</h2>
@@ -132,7 +129,6 @@
             </div>
           </form>
 
-
           <!-- 查询结果 -->
           <div id="result-container" class="mt-10 hidden">
             <div class="border-t pt-6">
@@ -160,7 +156,7 @@
                   </div>
                   <div>
                     <p class="text-sm text-gray-500">班级</p>
-                    <p class="font-medium" id="student-class">高二二班</p>
+                    <p class="font-medium" id="student-class">高二(2)班</p>
                   </div>
                   <div>
                     <p class="text-sm text-gray-500">学期</p>
@@ -174,10 +170,7 @@
                   <thead class="bg-gray-50">
                     <tr>
                       <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课程名称</th>
-                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学分</th>
                       <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">成绩</th>
-                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">绩点</th>
-                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课程性质</th>
                     </tr>
                   </thead>
                   <tbody class="bg-white divide-y divide-gray-200" id="grades-table">
@@ -185,14 +178,13 @@
                   </tbody>
                 </table>
               </div>
+
             </div>
           </div>
         </div>
       </div>
     </section>
-
-
-
+  </main>
 
   <footer class="bg-gray-800 text-white py-12">
     <div class="container mx-auto px-4">
@@ -200,19 +192,40 @@
         <div>
           <h3 class="text-lg font-semibold mb-4">成绩查询系统</h3>
           <p class="text-gray-400 mb-4">便捷、安全的成绩查询平台，帮助学生随时了解自己的学习情况。</p>
-          <div class="flex space-x-4">
-            <a href="#" class="text-gray-400 hover:text-white transition-custom">
-              <i class="fa fa-weixin text-xl"></i>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-white transition-custom">
-              <i class="fa fa-weibo text-xl"></i>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-white transition-custom">
-              <i class="fa fa-github text-xl"></i>
-            </a>
-          </div>
         </div>
         <div>
+          <h3 class="text-lg font-semibold mb-4">快速链接</h3>
+          <ul class="space-y-2">
+            <li><a href="#home" class="text-gray-400 hover:text-white transition-custom">首页</a></li>
+            <li><a href="#query" class="text-gray-400 hover:text-white transition-custom">成绩查询</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">学校链接</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-white transition-custom">学校官网</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-custom">教务处</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">联系我们</h3>
+          <ul class="space-y-2">
+            <li class="flex items-center">
+              <i class="fa fa-envelope-o mr-2 text-gray-400"></i>
+              <span class="text-gray-400">support@school.edu.cn</span>
+            </li>
+            <li class="flex items-center">
+              <i class="fa fa-phone mr-2 text-gray-400"></i>
+              <span class="text-gray-400">010-12345678</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+        <p>© 2025 成绩查询系统 - 版权所有</p>
+      </div>
+    </div>
+  </footer>
 
   <!-- 加载动画 -->
   <div id="loading" class="fixed inset-0 bg-white/80 flex items-center justify-center z-50 hidden">
@@ -240,21 +253,20 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
   <script>
-    // 示例成绩数据
+    // 示例成绩数据 - 语数英物化政史地生九门科目
     const sampleGrades = [
-      { course: '语文', score: 92,  },
-      { course: '数学', score: 85,   },
-      { course: '外语', score: 95,  },
-      { course: '政治', score: 88,  },
-      { course: '历史', score: "--",},
-      { course: '物理', score: 78,   },
-      { course: '化学', score: 82,  },
-      { course: '生物', score: "--", },
-	  { course: '地理', score: "--"}
+      { course: '语文', score: 103 },
+      { course: '数学', score: 100 },
+      { course: '英语', score: 105 },
+      { course: '物理', score: 64 },
+      { course: '化学', score: 63 },
+      { course: '政治', score: 60 },
+      { course: '历史', score: "--" },
+      { course: '地理', score: "--" },
+      { course: '生物', score: "--" },
+	  { course: '总分', score: 495}
     ];
-
 
     // DOM元素
     const navbar = document.getElementById('navbar');
@@ -270,7 +282,6 @@
     const notificationMessage = document.getElementById('notification-message');
     const notificationIcon = document.getElementById('notification-icon');
     const closeNotification = document.getElementById('close-notification');
-    const faqContainer = document.getElementById('faq-container');
     const printBtn = document.getElementById('print-btn');
     const exportBtn = document.getElementById('export-btn');
 
@@ -326,9 +337,11 @@
       
       const studentId = document.getElementById('student-id').value;
       const password = document.getElementById('password').value;
-      const semester = document.getElementById('semester').value;
       
-      if (!studentId || !password || !semester) {
+      // 添加控制台日志用于调试
+      console.log('表单提交: ', { studentId, password });
+      
+      if (!studentId || !password) {
         showNotification('错误', '请填写完整的查询信息', 'error');
         return;
       }
@@ -349,17 +362,12 @@
         
         // 更新统计信息
         document.getElementById('result-student-id').textContent = studentId;
-        document.getElementById('result-semester').textContent = document.getElementById('semester').options[document.getElementById('semester').selectedIndex].textContent;
-        
-        // 创建图表
-        createGradeDistributionChart();
-        createGpaTrendChart();
-        
-        // 填充统计信息
-        fillStatsInfo();
         
         // 显示通知
         showNotification('成功', '成绩查询成功', 'success');
+        
+        // 添加滚动到结果区域的动画
+        resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 1500);
     });
 
@@ -372,62 +380,33 @@
         row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
         
         let scoreClass = '';
-        if (grade.score >= 90) scoreClass = 'text-green-600';
-        else if (grade.score >= 80) scoreClass = 'text-blue-600';
-        else if (grade.score >= 70) scoreClass = 'text-yellow-600';
-        else if (grade.score >= 60) scoreClass = 'text-orange-600';
-        else scoreClass = 'text-red-600';
+        let level = '';
+        
         
         row.innerHTML = `
           <td class="px-6 py-4 whitespace-nowrap">
             <div class="text-sm font-medium text-gray-900">${grade.course}</div>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-sm text-gray-900">${grade.credits}</div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap">
             <div class="text-sm font-medium ${scoreClass}">${grade.score}</div>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-sm text-gray-900">${grade.gpa}</div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-sm text-gray-900">${grade.type}</div>
+            <div class="text-sm text-gray-900">${level}</div>
           </td>
         `;
         
         gradesTable.appendChild(row);
       });
-    }
-
-    // 填充常见问题
-    function fillFaq() {
-      faqData.forEach((faq, index) => {
-        const faqItem = document.createElement('div');
-        faqItem.className = 'bg-gray-50 rounded-lg overflow-hidden';
-        faqItem.innerHTML = `
-          <button class="faq-toggle w-full flex justify-between items-center p-5 text-left focus:outline-none" data-index="${index}">
-            <span class="font-medium text-gray-800">${faq.question}</span>
-            <i class="fa fa-chevron-down text-gray-500 transition-transform duration-300"></i>
-          </button>
-          <div class="faq-content px-5 pb-5 hidden">
-            <p class="text-gray-600">${faq.answer}</p>
-          </div>
-        `;
-        
-        faqContainer.appendChild(faqItem);
-      });
       
-      // 添加FAQ切换事件
-      document.querySelectorAll('.faq-toggle').forEach(toggle => {
-        toggle.addEventListener('click', () => {
-          const content = toggle.nextElementSibling;
-          const icon = toggle.querySelector('i');
-          
-          content.classList.toggle('hidden');
-          icon.classList.toggle('rotate-180');
-        });
-      });
+      // 计算平均分、最高分和最低分
+      const scores = grades.map(g => g.score);
+      const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+      const highest = Math.max(...scores);
+      const lowest = Math.min(...scores);
+      
+      document.getElementById('average-score').textContent = average.toFixed(1);
+      document.getElementById('highest-score').textContent = highest;
+      document.getElementById('lowest-score').textContent = lowest;
     }
 
     // 显示通知
@@ -474,10 +453,7 @@
 
     // 关闭通知按钮事件
     closeNotification.addEventListener('click', closeNotificationHandler);
-
-    // 初始化FAQ
-    fillFaq();
   </script>
 </body>
 </html>
-    
+  
