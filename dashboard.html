@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>控制台 - 接码平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 顶部导航 -->
+    <nav class="bg-blue-600 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">接码平台管理控制台</h1>
+            <button id="logout" class="bg-white text-blue-600 px-4 py-1 rounded hover:bg-gray-100">退出登录</button>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="container mx-auto p-4 mt-6">
+        <div class="bg-white rounded-lg shadow p-6 max-w-2xl mx-auto">
+            <h3 class="text-lg font-semibold mb-4">手机号获取</h3>
+            
+            <!-- 获取手机号按钮 -->
+            <button id="getPhone" class="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 mb-4">获取手机号</button>
+            
+            <!-- 显示手机号 -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">获取到的手机号</label>
+                <input type="text" id="phone" readonly class="w-full px-4 py-2 border bg-gray-100 rounded-md">
+            </div>
+
+            <!-- 子页面区域 -->
+            <div class="border-t pt-4 mt-4">
+                <h3 class="text-lg font-semibold mb-4">用户子页面</h3>
+                <button id="createPage" class="bg-purple-600 text-white px-5 py-2 rounded hover:bg-purple-700 mb-3">生成随机子页面</button>
+                
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">子页面地址</label>
+                    <input type="text" id="pageUrl" readonly class="w-full px-4 py-2 border bg-gray-100 rounded-md">
+                </div>
+
+                <div id="copySuccess" class="text-green-600 text-sm hidden">已复制！</div>
+                <button id="copyBtn" class="mt-2 bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 hidden">复制链接</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 登录验证
+        if (!localStorage.getItem('adminLoggedIn')) {
+            window.location.href = 'index.html';
+        }
+
+        // 退出登录
+        document.getElementById('logout').addEventListener('click', () => {
+            localStorage.removeItem('adminLoggedIn');
+            window.location.href = 'index.html';
+        });
+
+        let currentPhone = '';
+        let currentCode = '';
+
+        // 1. 获取手机号（调用API A）
+        document.getElementById('getPhone').addEventListener('click', async () => {
+            try {
+                // 模拟调用 API A
+                const mockPhone = `1${Math.floor(Math.random() * 10000000000)}`.slice(0, 11);
+                currentPhone = mockPhone;
+                document.getElementById('phone').value = mockPhone;
+                alert('手机号获取成功！');
+            } catch (err) {
+                alert('获取失败：' + err.message);
+            }
+        });
+
+        // 2. 生成随机子页面
+        document.getElementById('createPage').addEventListener('click', () => {
+            if (!currentPhone) {
+                alert('请先获取手机号！');
+                return;
+            }
+
+            // 生成随机字符串
+            const randomStr = Math.random().toString(36).slice(2, 10);
+            currentCode = randomStr;
+            
+            // 子页面完整地址
+            const pageUrl = `${window.location.origin}/page/${randomStr}.html`;
+            document.getElementById('pageUrl').value = pageUrl;
+            
+            // 显示复制按钮
+            document.getElementById('copyBtn').classList.remove('hidden');
+            
+            // 模拟创建子页面（实际环境需后端生成）
+            createSubPage(randomStr, currentPhone);
+        });
+
+        // 3. 复制链接
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const url = document.getElementById('pageUrl').value;
+            navigator.clipboard.writeText(url);
+            document.getElementById('copySuccess').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('copySuccess').classList.add('hidden');
+            }, 2000);
+        });
+
+        // 模拟生成子页面文件（实际项目由后端实现）
+        function createSubPage(code, phone) {
+            localStorage.setItem(`page_${code}`, phone);
+        }
+    </script>
+</body>
+</html>
