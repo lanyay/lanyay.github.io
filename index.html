@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>接码管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body{background:#111;color:#fff;}
+        .box{max-width:600px;margin:50px auto;padding:20px;border:1px #333 solid;border-radius:8px;}
+        input,button{padding:8px;margin:5px 0;width:100%;box-sizing:border-box;}
+        button:disabled{background:#666;cursor:not-allowed;opacity:0.7;}
+        .reset-btn{background:#dc2626;}
+        #resetBtn{display: none;}
+    </style>
+</head>
+<body>
+    <!-- 管理员登录界面 -->
+    <div class="box" id="loginBox">
+        <h3 class="text-xl text-center mb-4">管理员登录</h3>
+        <input type="text" id="usr" placeholder="请输入账号">
+        <input type="password" id="pwd" placeholder="请输入密码">
+        <div style="color:red;margin:5px 0;" id="loginTip"></div>
+        <button onclick="adminLogin()" class="bg-blue-600 py-2 rounded">登录</button>
+    </div>
+
+    <!-- 功能主界面 -->
+    <div class="box" id="funcBox" style="display:none;">
+        <h3 class="text-xl text-center mb-4">功能控制台</h3>
+
+        <div class="my-3">
+            <span>当前手机号：</span>
+            <span id="phoneShow">暂无</span>
+        </div>
+        <button id="getPhoneBtn" onclick="getPhone()" class="bg-blue-600 py-2 rounded my-2">获取手机号</button>
+        <button id="resetBtn" onclick="resetPhoneLimit()" class="reset-btn py-2 rounded my-2">重置领取权限</button>
+
+        <div class="my-3">
+            <span>当前验证码：</span>
+            <span id="codeShow">暂无</span>
+        </div>
+        <button id="getCodeBtn" onclick="getCode()" class="bg-orange-600 py-2 rounded my-2">获取验证码</button>
+    </div>
+
+<script>
+    // 账号密码配置
+    const ACC = "LazyBigKing";
+    const PWD = "LazyBigKing114514";
+
+    // 接口配置
+    function getApi(){
+        return "https://api.eomsg.com/zc/data.php";
+    }
+    function getToken(){
+        return "95a50600291b44999405b89a122cfd30";
+    }
+    function getKeyWord(){
+        return "%e5%8f%a4%e6%80%aa%e5%8a%a0%e9%80%9f%e5%99%a8";
+    }
+
+    // 防调试
+    document.oncontextmenu = ()=>false;
+    document.onkeydown = e=>{
+        if(e.keyCode===123 || (e.ctrlKey&&e.keyCode===85) || (e.ctrlKey&&e.shiftKey&&e.keyCode===73)) return false;
+    };
+
+    let currentPhone = "";
+    let isCodeSuccess = false;
+
+    // 页面初始化 + 解析访客链接
+    window.onload = function(){
+        // 管理员登录状态
+        if(sessionStorage.getItem('isAdmin') === '1'){
+            document.getElementById('loginBox').style.display = 'none';
+            document.getElementById('funcBox').style.display = 'block';
+            document.getElementById('resetBtn').style.display = "block";
+        }
+        // 手机号领取限制判断
+        if(localStorage.getItem("hasGetPhone") === "1"){
+            document.getElementById('getPhoneBtn').disabled = true;
+            document.getElementById('phoneShow').innerText = "已领取，管理员可重置权限";
+        }
+
+        // 解析访客取码链接（优化：去掉过期逻辑，只判断是否存在）
+        const params = new URLSearchParams(location.search);
+        const k = params.get('key');
+        if(k){
+            const phone = localStorage.getItem(k);
+            if(phone){
+                document.body.innerHTML = `<div class="box"><h3>取码页面</h3><div>手机号：${phone}</div>
+                <button onclick="getVisitorMsg('${phone}')" class="bg-blue-600 py-2 rounded my-2">获取验证码</button>
+                <div id="vMsg"></div></div>`;
+            }else{
+                // 优化提示，不再写"已过期"，改为友好提示
+                document.body.innerHTML = `<div class="box"><h3 style="color:red;">链接数据不存在，请重新生成链接</h3></div>`;
+            }
+        }
+    };
+
+    // 管理员登录
+    function adminLogin(){
+        let u = document.getElementById('usr').value.trim();
+        let p = document.getElementById('pwd').value.trim();
+        let tip = document.getElementById('loginTip');
+        tip.innerText = "";
+
+        if(u === ACC && p === PWD){
+            sessionStorage.setItem('isAdmin','1');
+            document.getElementById('loginBox').style.display = 'none';
+            document.getElementById('funcBox').style.display = 'block';
+            document.getElementById('resetBtn').style.display = "block";
+        }else{
+            tip.innerText = "账号或密码输入错误";
+        }
+    }
+
+    // 重置领取权限（管理员专属）
+    function resetPhoneLimit(){
+        localStorage.removeItem("hasGetPhone");
+        currentPhone = "";
+        isCodeSuccess = false;
+        document.getElementById('getPhoneBtn').disabled = false;
+        document.getElementById('getCodeBtn').disabled = false;
+        document.getElementById('phoneShow').innerText = "暂无";
+        document.getElementById('codeShow').innerText = "暂无";
+        alert("权限已重置，可以重新获取手机号！");
+    }
+
+    // 获取手机号（仅可领取一次）
+    function getPhone(){
+        if(localStorage.getItem("hasGetPhone") === "1"){
+            alert("已领取，请联系管理员重置权限！");
+            return;
+        }
+
+        let api = getApi();
+        let token = getToken();
+        let kw = getKeyWord();
+        let url = `${api}?code=getPhone&token=${token}&keyWord=${kw}&cardType=全部`;
+
+        fetch(url)
+        .then(res=>res.text())
+        .then(res=>{
+            if(res){
+                currentPhone = res;
+                document.getElementById('phoneShow').innerText = res;
+                localStorage.setItem("hasGetPhone", "1");
+                // 生成随机key并永久存储，无过期时间
+                const randomKey = Math.random().toString(36).slice(2,10);
+                localStorage.setItem(randomKey, res);
+                const link = location.origin + location.pathname + "?key=" + randomKey;
+                // 弹窗显示链接，方便复制
+                alert("取码链接：\n" + link);
+                document.getElementById('getPhoneBtn').disabled = true;
+            }else{
+                alert("获取手机号失败");
+            }
+        })
+        .catch(()=>alert("网络请求异常"));
+    }
+
+    // 管理员端获取验证码
+    function getCode(){
+        if(!currentPhone && localStorage.getItem("hasGetPhone") !== "1"){
+            alert("请先获取手机号！");
+            return;
+        }
+        if(isCodeSuccess){
+            alert("已获取有效6位验证码");
+            return;
+        }
+
+        let api = getApi();
+        let token = getToken();
+        let kw = getKeyWord();
+        let url = `${api}?code=getMsg&token=${token}&phone=${currentPhone}&keyWord=${kw}`;
+
+        fetch(url)
+        .then(res=>res.text())
+        .then(res=>{
+            let code = res.trim();
+            document.getElementById('codeShow').innerText = code;
+            if(/^\d{6}$/.test(code)){
+                isCodeSuccess = true;
+                document.getElementById('getCodeBtn').disabled = true;
+                alert("成功获取6位数字验证码！");
+            }
+        })
+        .catch(()=>alert("网络请求异常"));
+    }
+
+    // 访客端获取验证码
+    function getVisitorMsg(phone){
+        let api = getApi();
+        let token = getToken();
+        let kw = getKeyWord();
+        let url = `${api}?code=getMsg&token=${token}&phone=${phone}&keyWord=${kw}`;
+
+        fetch(url)
+        .then(res=>res.text())
+        .then(res=>{
+            document.getElementById('vMsg').innerText = "验证码：" + res;
+        })
+        .catch(()=>{
+            document.getElementById('vMsg').innerText = "请求失败";
+        });
+    }
+</script>
+</body>
+</html>
