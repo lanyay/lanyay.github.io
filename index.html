@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>接码管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body{background:#111;color:#fff;}
+        .box{max-width:600px;margin:50px auto;padding:20px;border:1px #333 solid;border-radius:8px;}
+        input,button{padding:8px;margin:5px 0;width:100%;box-sizing:border-box;}
+    </style>
+</head>
+<body>
+    <div class="box" id="loginBox">
+        <h3 class="text-xl text-center mb-4">管理员登录</h3>
+        <input type="text" id="usr" placeholder="请输入账号">
+        <input type="password" id="pwd" placeholder="请输入密码">
+        <div style="color:red;margin:5px 0;" id="loginTip"></div>
+        <button onclick="adminLogin()" class="bg-blue-600 py-2 rounded">登录</button>
+    </div>
+
+    <div class="box" id="mainBox" style="display:none;">
+        <h3 class="text-xl text-center mb-4">后台控制台</h3>
+        <div>当前手机号：<span id="phoneShow"></span></div>
+        <button onclick="getPhone()" class="bg-blue-600 py-2 rounded my-2">获取手机号</button>
+        <div>取码链接：<input type="text" id="linkShow" readonly></div>
+        <button onclick="copyLink()" class="bg-green-600 py-2 rounded my-2">复制链接</button>
+        <div style="color:green;margin:5px 0;" id="copyTip"></div>
+        <button onclick="getMsg()" class="bg-orange-600 py-2 rounded my-2">获取验证码</button>
+        <div>验证码：<span id="msgShow"></span></div>
+    </div>
+
+<script>
+// Base64 解码函数
+function decodeStr(str){
+    return atob(str);
+}
+
+// 加密后的字符串（已对应：LazyBigKing / LazyBigKing114514）
+const ENC_USER  = "TGF6eUJpS2luZw==";
+const ENC_PWD   = "TGF6eUJpS2luZzExNDUxNA==";
+const ENC_API   = "aHR0cHM6Ly9hcGkuZW9tc2cuY29tL3pjL2RhdGEucGhw";
+const ENC_TOKEN = "OTVhNTA2MDAyOTFiNDQ5OTk0MDViODlhMTIyY2ZkMzA=";
+const ENC_KEYWD = "JWU1JThkJWE0JWU2JgwwYWElZTUlOGEwJWU5JgwwOWYlZTUlOTlhOA==";
+
+// 运行时解码出真实内容
+const REAL_USER  = decodeStr(ENC_USER);
+const REAL_PWD   = decodeStr(ENC_PWD);
+const REAL_API   = decodeStr(ENC_API);
+const REAL_TOKEN = decodeStr(ENC_TOKEN);
+const REAL_KEYWD = decodeStr(ENC_KEYWD);
+
+// 防调试、禁用右键/F12
+document.oncontextmenu = ()=>false;
+document.onkeydown = e=>{
+    if(e.keyCode===123 || (e.ctrlKey&&e.keyCode===85) || (e.ctrlKey&&e.shiftKey&&e.keyCode===73)){
+        return false;
+    }
+};
+
+let currentPhone = "";
+let randomKey = "";
+
+// 页面加载判断登录状态 + 解析访客链接
+window.onload = function(){
+    if(sessionStorage.getItem('isAdmin') === '1'){
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('mainBox').style.display = 'block';
+    }
+
+    const params = new URLSearchParams(location.search);
+    const k = params.get('key');
+    if(k){
+        const phone = localStorage.getItem(k);
+        if(phone){
+            document.body.innerHTML = `<div class="box"><h3>取码页面</h3><div>手机号：${phone}</div>
+            <button onclick="getVisitorMsg('${phone}')" class="bg-blue-600 py-2 rounded my-2">获取验证码</button>
+            <div id="vMsg"></div></div>`;
+        }else{
+            document.body.innerHTML = `<div class="box"><h3 style="color:red;">链接无效或已过期</h3></div>`;
+        }
+    }
+};
+
+// 登录校验
+function adminLogin(){
+    const u = document.getElementById('usr').value.trim();
+    const p = document.getElementById('pwd').value.trim();
+    const tip = document.getElementById('loginTip');
+    tip.innerText = "";
+
+    if(u === REAL_USER && p === REAL_PWD){
+        sessionStorage.setItem('isAdmin','1');
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('mainBox').style.display = 'block';
+    }else{
+        tip.innerText = "账号或密码输入错误";
+    }
+}
+
+// 获取手机号
+function getPhone(){
+    const url = `${REAL_API}?code=getPhone&token=${REAL_TOKEN}&keyWord=${REAL_KEYWD}&cardType=全部`;
+    fetch(url)
+    .then(res=>res.text())
+    .then(res=>{
+        if(res){
+            currentPhone = res;
+            document.getElementById('phoneShow').innerText = currentPhone;
+            randomKey = Math.random().toString(36).slice(2,10);
+            localStorage.setItem(randomKey, currentPhone);
+            const link = location.origin + location.pathname + "?key=" + randomKey;
+            document.getElementById('linkShow').value = link;
+        }else{
+            alert("获取手机号失败");
+        }
+    })
+    .catch(()=>alert("网络请求异常"));
+}
+
+// 复制链接
+function copyLink(){
+    const link = document.getElementById('linkShow');
+    const tip = document.getElementById('copyTip');
+    link.select();
+    navigator.clipboard.writeText(link.value).then(()=>{
+        tip.innerText = "复制成功！";
+        setTimeout(()=>tip.innerText="",2000);
+    });
+}
+
+// 管理员获取验证码
+function getMsg(){
+    if(!currentPhone){
+        return alert("请先获取手机号");
+    }
+    const url = `${REAL_API}?code=getMsg&token=${REAL_TOKEN}&phone=${currentPhone}&keyWord=${REAL_KEYWD}`;
+    fetch(url)
+    .then(res=>res.text())
+    .then(res=>{
+        document.getElementById('msgShow').innerText = res || "获取失败";
+    })
+    .catch(()=>alert("请求异常"));
+}
+
+// 访客端获取验证码
+function getVisitorMsg(phone){
+    const url = `${REAL_API}?code=getMsg&token=${REAL_TOKEN}&phone=${phone}&keyWord=${REAL_KEYWD}`;
+    fetch(url)
+    .then(res=>res.text())
+    .then(res=>{
+        document.getElementById('vMsg').innerText = "验证码：" + res;
+    })
+    .catch(()=>{
+        document.getElementById('vMsg').innerText = "请求失败";
+    });
+}
+</script>
+</body>
+</html>
