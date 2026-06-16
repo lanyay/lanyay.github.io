@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>接码管理系统</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen">
+<!-- 登录面板 -->
+<div id="loginBox" class="max-w-md mx-auto mt-20 bg-white p-8 rounded-xl shadow-lg">
+  <h2 class="text-2xl font-bold text-center mb-6">管理员登录</h2>
+  <div class="mb-4 text-red-500 hidden" id="loginTip">账号密码错误</div>
+  <div class="space-y-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700">账号</label>
+      <input class="w-full border px-3 py-2 rounded" id="usr" value="admin">
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700">密码</label>
+      <input type="password" class="w-full border px-3 py-2 rounded" id="pwd" value="123456">
+    </div>
+    <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">登录后台</button>
+  </div>
+</div>
+
+<!-- 管理员控制台 -->
+<div id="adminPanel" class="hidden container mx-auto p-6 max-w-2xl">
+  <div class="flex justify-between items-center bg-blue-600 text-white p-4 rounded-lg mb-6">
+    <h1 class="text-xl font-bold">接码控制台</h1>
+    <button onclick="logout()" class="bg-white text-blue-600 px-3 py-1 rounded">退出登录</button>
+  </div>
+
+  <div class="bg-white p-6 rounded-xl shadow">
+    <button onclick="getPhone()" class="bg-emerald-600 text-white px-4 py-2 rounded mb-4 hover:bg-emerald-700">1. 调用API-A 获取手机号</button>
+    
+    <div class="mb-5">
+      <label class="text-sm font-medium block mb-1">获取手机号（只读）</label>
+      <input readonly id="phoneInput" class="w-full border bg-gray-100 px-3 py-2 rounded">
+    </div>
+
+    <button onclick="genUserUrl()" class="bg-violet-600 text-white px-4 py-2 rounded mb-4 hover:bg-violet-700">2. 生成用户取码链接</button>
+
+    <div class="mb-2">
+      <label class="text-sm font-medium block mb-1">用户访问链接（无/page目录，不会404）</label>
+      <input readonly id="linkInput" class="w-full border bg-gray-100 px-3 py-2 rounded">
+    </div>
+    <div class="text-green-500 text-sm mb-2 hidden" id="copyTip">链接已复制到剪贴板！</div>
+    <button onclick="copyUrl()" class="bg-gray-700 text-white px-3 py-1 rounded text-sm hidden" id="copyBtn">复制链接</button>
+    <p class="text-gray-500 text-sm mt-3">✅ 优势：链接格式为 域名/?key=随机串，无需page文件夹，Github Pages不会404</p>
+  </div>
+</div>
+
+<script>
+let currentPhone = "";
+let randomKey = "";
+
+// 登录校验
+function login(){
+  const u = document.getElementById('usr').value;
+  const p = document.getElementById('pwd').value;
+  if(u === 'admin' && p === '123456'){
+    localStorage.setItem('isAdmin', '1');
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+  }else{
+    document.getElementById('loginTip').classList.remove('hidden');
+  }
+}
+function logout(){
+  localStorage.removeItem('isAdmin');
+  location.reload();
+}
+
+// 页面初始化
+window.onload = ()=>{
+  const params = new URLSearchParams(location.search);
+  const pageKey = params.get("key");
+  // 如果URL携带key，直接渲染用户取码页面
+  if(pageKey){
+    renderUserPage(pageKey);
+    return;
+  }
+  // 无参数则显示登录页
+  if(localStorage.getItem('isAdmin') === '1'){
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+  }
+}
+
+// 模拟API-A 获取手机号
+function getPhone(){
+  currentPhone = '1' + Array(10).fill(0).map(()=>Math.floor(Math.random()*10)).join('');
+  document.getElementById('phoneInput').value = currentPhone;
+  randomKey = Math.random().toString(36).slice(2,10);
+  localStorage.setItem('tel_' + randomKey, currentPhone);
+}
+
+// 生成无目录链接（不会404）
+function genUserUrl(){
+  if(!currentPhone){
+    alert("请先获取手机号！");
+    return;
+  }
+  const baseUrl = window.location.origin + window.location.pathname;
+  const userUrl = `${baseUrl}?key=${randomKey}`;
+  document.getElementById('linkInput').value = userUrl;
+  document.getElementById('copyBtn').classList.remove('hidden');
+}
+
+// 复制链接
+async function copyUrl(){
+  const val = document.getElementById('linkInput').value;
+  await navigator.clipboard.writeText(val);
+  document.getElementById('copyTip').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('copyTip').classList.add('hidden'),2000);
+}
+
+// 渲染用户取码页面
+function renderUserPage(key){
+  const tel = localStorage.getItem(`tel_${key}`);
+  if(!tel){
+    document.body.innerHTML = `<div class="w-full h-screen flex items-center justify-center text-red-500 text-xl">链接无效、过期或使用新设备打开（数据存在浏览器本地）</div>`;
+    return;
+  }
+  document.body.innerHTML = `
+  <div class="w-full h-screen flex items-center justify-center p-4 bg-slate-100">
+    <div class="w-full max-w-md bg-white p-7 rounded-xl shadow-lg">
+      <h2 class="text-xl font-bold text-center mb-6">短信验证码获取</h2>
+      <div class="mb-4">
+        <label class="text-sm font-medium block mb-1">接收短信手机号</label>
+        <input readonly id="telBox" value="${tel}" class="w-full bg-gray-100 border px-3 py-2 rounded">
+      </div>
+      <div class="mb-6">
+        <label class="text-sm font-medium block mb-1">验证码结果</label>
+        <input readonly id="codeBox" class="w-full bg-gray-100 border px-3 py-2 rounded">
+      </div>
+      <button id="fetchBtn" onclick="getCode()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">获取验证码(调用API-B)</button>
+    </div>
+  </div>
+  `;
+}
+
+// 模拟API-B 获取验证码
+async function getCode(){
+  const btn = document.getElementById('fetchBtn');
+  btn.disabled = true;
+  btn.innerText = "请求中...";
+  await new Promise(res=>setTimeout(res,1200));
+  const code = Math.floor(100000 + Math.random()*900000);
+  document.getElementById('codeBox').value = code;
+  btn.disabled = false;
+  btn.innerText = "获取验证码(调用API-B)";
+}
+</script>
+</body>
+</html>
