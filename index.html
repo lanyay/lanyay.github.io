@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>接码管理系统</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js"></script>
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    background: linear-gradient(145deg, #0b101f, #121a33);
+    color: #e8edf3;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    font-size: 15px;
+    font-family: "Microsoft Yahei", system-ui, -apple-system, sans-serif;
+}
+.main-card {
+    max-width: 640px;
+    margin: 0 auto;
+    background: rgba(22, 28, 45, 0.95);
+    border: 1px solid rgba(80, 120, 255, 0.2);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(60, 100, 220, 0.08);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+.main-card:hover {
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(70, 130, 255, 0.15);
+}
+.title-text {
+    font-size: 24px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 28px;
+    color: #ffffff;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+.block-box {
+    border: 1px dashed rgba(100, 140, 255, 0.25);
+    padding: 20px;
+    border-radius: 14px;
+    margin-bottom: 22px;
+    background: rgba(40, 50, 80, 0.2);
+}
+.link-wrap {
+    border: 1px solid rgba(80, 120, 255, 0.25);
+    padding: 18px;
+    border-radius: 14px;
+    margin-top: 18px;
+    background: rgba(30, 40, 70, 0.25);
+    min-height: 100px;
+}
+.label-text {
+    font-size: 14px;
+    color: #b4c2e0;
+    margin-bottom: 10px;
+    display: block;
+}
+.input-field {
+    width: 100%;
+    padding: 14px 16px;
+    margin: 8px 0;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+    background: rgba(28, 38, 64, 0.8);
+    color: #f0f4ff;
+    border: 1px solid rgba(90, 130, 255, 0.2);
+    font-size: 15px;
+    transition: all 0.25s ease;
+}
+.input-field:focus {
+    border-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+    background: rgba(32, 44, 72, 0.9);
+}
+.btn {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.25s ease;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: #fff;
+}
+.btn-primary:hover {
+    opacity: 0.94;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35);
+}
+.btn-danger {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    color: #fff;
+}
+.btn-danger:hover {
+    opacity: 0.94;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.35);
+}
+.btn-warn {
+    background: linear-gradient(135deg, #ea580c, #fb923c);
+    color: #fff;
+}
+.btn-warn:hover {
+    opacity: 0.94;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(249, 115, 22, 0.35);
+}
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+.url-scroll-box {
+    background: rgba(20, 28, 48, 0.9);
+    border: 1px solid rgba(80, 120, 255, 0.2);
+    padding: 16px;
+    border-radius: 10px;
+    max-height: 340px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: #84b8ff;
+    line-height: 2;
+    font-size: 14px;
+}
+.url-scroll-box::-webkit-scrollbar {
+    width: 7px;
+}
+.url-scroll-box::-webkit-scrollbar-thumb {
+    background: rgba(100, 140, 255, 0.35);
+    border-radius: 4px;
+}
+.url-scroll-box::-webkit-scrollbar-track {
+    background: rgba(25, 35, 60, 0.4);
+}
+.code-normal {
+    font-size: 18px;
+    color: #e8edf3;
+    font-weight: 500;
+}
+.code-red {
+    color: #ff4d4f;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-shadow: 0 0 6px rgba(255, 77, 79, 0.3);
+}
+.tip-small {
+    color: #94a3c2;
+    font-size: 14px;
+    margin: 6px 0 12px;
+}
+.tip-error {
+    color: #ff6b6b;
+}
+.mt-5 {
+    margin-top: 24px;
+}
+</style>
+</head>
+<body>
+<div id="visitor-container" style="display:none;">
+    <div class="main-card">
+        <h2 class="title-text">取码页面</h2>
+        <p class="label-text">绑定手机号：<span id="vis-phone" class="code-normal"></span></p>
+        <button onclick="visitorGetCode()" class="btn btn-primary mt-2">获取验证码</button>
+        <p id="vis-code" class="mt-5 tip-small"></p>
+    </div>
+</div>
+
+<div id="admin-container">
+    <div class="main-card" id="login-module">
+        <h2 class="title-text">管理员登录</h2>
+        <input class="input-field" id="admin-user" placeholder="输入管理员账号">
+        <input class="input-field" id="admin-pass" type="password" placeholder="输入登录密码">
+        <p class="tip-small tip-error" id="login-tip"></p>
+        <button onclick="adminLogin()" class="btn btn-primary">登录系统</button>
+    </div>
+
+    <div class="main-card" id="control-module" style="display:none;">
+        <h2 class="title-text">管理员控制台</h2>
+        <div class="block-box">
+            <p class="label-text">设置一次性批量获取手机号数量</p>
+            <input class="input-field" type="number" id="setTimesInput" min="1" placeholder="输入数字，例如 10">
+            <button onclick="setBatchNum()" class="btn btn-danger">确认批量数量</button>
+        </div>
+        <p class="tip-small">本次批量获取目标数量：<span id="batchNumText">未设置</span></p>
+        <button id="btn-get-phone" onclick="batchGetPhone()" class="btn btn-primary">一键批量获取全部手机号</button>
+
+        <div class="link-wrap" id="link-area" style="display:none;">
+            <p class="label-text">批量生成的永久访问链接（无手机号泄露）：</p>
+            <div class="url-scroll-box" id="urlListBox"></div>
+        </div>
+
+        <p class="mt-5 label-text">当前验证码：<span id="admin-code" class="code-normal">暂无</span></p>
+        <button id="btn-get-code" onclick="fetchVerifyCode()" class="btn btn-warn">获取验证码</button>
+    </div>
+</div>
+
+<script>
+// 安全全局配置
+const decode64 = s => atob(s);
+const CONFIG = {
+    username: decode64("TGF6eUJpS2luZw=="),
+    password: decode64("TGF6eUJpS2luZzExNDUxNA=="),
+    apiUrl: decode64("aHR0cHM6Ly9hcGkuZW9tc2cuY29tL3pjL2RhdGEucGhw"),
+    token: decode64("OTVhNTA2MDAyOTFiNDQ5OTk0MDViODlhMTIyY2ZkMzA="),
+    keyword: "%E5%8F%A4%E6%80%AA%E5%8A%A0%E9%80%9F%E5%99%A8",
+    aesKey: "AdminCode2026SecretKey",
+    signSecret: "SignSecret2026Code",
+    tokenExpire: 300
+};
+
+// 全局变量
+let storedPhone = "";
+let finishCode = false;
+let visitorBindPhone = "";
+let batchCount = 0;
+let accessToken = "";
+let tokenCreateTime = 0;
+
+// 工具函数：加密ID（把手机号加密到ID里）
+function encryptPhoneToId(phone){
+    // AES加密手机号 → Base64编码（避免URL特殊字符）
+    const encryptPhone = CryptoJS.AES.encrypt(phone, CONFIG.aesKey).toString();
+    const safeId = btoa(encryptPhone).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+    return safeId;
+}
+
+// 工具函数：解密ID获取手机号
+function decryptIdToPhone(safeId){
+    try{
+        // 还原Base64特殊字符 → AES解密
+        const restoreId = safeId.replace(/-/g, "+").replace(/_/g, "/");
+        const encryptPhone = atob(restoreId);
+        return CryptoJS.AES.decrypt(encryptPhone, CONFIG.aesKey).toString(CryptoJS.enc.Utf8);
+    }catch(e){
+        return "";
+    }
+}
+
+// 生成请求签名
+function createSign(params, timestamp, nonce){
+    let str = "";
+    const keys = Object.keys(params).sort();
+    keys.forEach(k=>{
+        str += k + "=" + params[k] + "&";
+    });
+    str += "timestamp=" + timestamp + "&nonce=" + nonce + "&secret=" + CONFIG.signSecret;
+    return CryptoJS.MD5(str).toString();
+}
+
+// 生成时效Token
+function generateToken(){
+    const timestamp = Math.floor(Date.now()/1000);
+    const raw = timestamp + "_" + Math.random().toString(36).substr(2, 12);
+    accessToken = btoa(raw);
+    tokenCreateTime = timestamp;
+}
+
+// 校验Token是否过期
+function checkTokenExpire(){
+    const now = Math.floor(Date.now()/1000);
+    return (now - tokenCreateTime) > CONFIG.tokenExpire;
+}
+
+// 刷新Token
+function refreshTokenLoop(){
+    setInterval(()=>{
+        generateToken();
+    }, CONFIG.tokenExpire * 1000 - 30000);
+}
+
+// 开发者工具检测
+(function devToolsDetect(){
+    let openFlag = false;
+    const threshold = 160;
+    function checkDevTool(){
+        const width = window.outerWidth - window.innerWidth;
+        const height = window.outerHeight - window.innerHeight;
+        if(width > threshold || height > threshold){
+            openFlag = true;
+            window.location.href = "https://www.bilibili.com";
+        }
+    }
+    window.addEventListener("resize",checkDevTool);
+    setInterval(checkDevTool,400);
+    const handler = setInterval(()=>{
+        const start = performance.now();
+        debugger;
+        const end = performance.now();
+        if(end - start > 100){
+            clearInterval(handler);
+            window.location.href = "https://www.bilibili.com";
+        }
+    },1000);
+})();
+
+// 页面初始化
+(function initPage(){
+    generateToken();
+    refreshTokenLoop();
+
+    const urlParam = new URLSearchParams(location.search);
+    const linkId = urlParam.get("id");
+    if(linkId){
+        // 解密ID获取手机号（不再依赖localStorage）
+        visitorBindPhone = decryptIdToPhone(linkId);
+        if(!visitorBindPhone || !/^\d{11}$/.test(visitorBindPhone)){
+            document.body.innerHTML = "<div style='text-align:center;margin-top:80px;color:#ff4d4f;font-size:20px;'>无效访问链接，禁止进入</div>";
+            return;
+        }
+        document.getElementById("admin-container").style.display = "none";
+        document.getElementById("visitor-container").style.display = "block";
+        document.getElementById("vis-phone").innerText = visitorBindPhone;
+        return;
+    }
+})();
+
+// 管理员登录
+function adminLogin(){
+    const inputUser = document.getElementById("admin-user").value.trim();
+    const inputPass = document.getElementById("admin-pass").value.trim();
+    const tipDom = document.getElementById("login-tip");
+    tipDom.innerText = "";
+    if(inputUser === CONFIG.username && inputPass === CONFIG.password){
+        document.getElementById("login-module").style.display = "none";
+        document.getElementById("control-module").style.display = "block";
+    }else{
+        tipDom.innerText = "账号或密码错误，请重新输入";
+    }
+}
+
+// 设置批量数量
+function setBatchNum(){
+    const num = parseInt(document.getElementById("setTimesInput").value);
+    if(isNaN(num)||num<1){
+        alert("请输入大于0的整数");
+        return;
+    }
+    batchCount = num;
+    document.getElementById("batchNumText").innerText = batchCount;
+    document.getElementById("urlListBox").innerText = "";
+    document.getElementById("link-area").style.display = "none";
+    document.getElementById("btn-get-phone").disabled = false;
+    alert("批量获取数量已设置完成");
+}
+
+// 批量获取手机号（生成加密ID链接）
+async function batchGetPhone(){
+    if(batchCount <= 0){
+        alert("请先设置批量获取数量");
+        return;
+    }
+    if(checkTokenExpire()){
+        generateToken();
+        alert("身份凭证已刷新，请重新点击");
+        return;
+    }
+
+    document.getElementById("btn-get-phone").disabled = true;
+    document.getElementById("urlListBox").innerText = "";
+    document.getElementById("link-area").style.display = "block";
+    let allLinks = "";
+
+    for(let i=0;i<batchCount;i++){
+        const timestamp = Math.floor(Date.now()/1000);
+        const nonce = Math.random().toString(36).substr(2, 10);
+        const params = {
+            code: "getPhone",
+            token: CONFIG.token,
+            keyWord: CONFIG.keyword,
+            cardType: "全部"
+        };
+        const sign = createSign(params, timestamp, nonce);
+
+        const reqUrl = `${CONFIG.apiUrl}?code=${params.code}&token=${params.token}&keyWord=${params.keyWord}&cardType=${params.cardType}&accessToken=${accessToken}&timestamp=${timestamp}&nonce=${nonce}&sign=${sign}`;
+
+        const res = await fetch(reqUrl);
+        const phone = await res.text().then(t => t.trim());
+        if(!phone || !/^\d{11}$/.test(phone)) continue;
+
+        // 生成加密ID（包含手机号）
+        const encryptId = encryptPhoneToId(phone);
+        const newLink = `${location.origin}${location.pathname}?id=${encryptId}`;
+        allLinks += newLink + "\n";
+    }
+
+    document.getElementById("urlListBox").innerText = allLinks;
+    document.getElementById("btn-get-phone").disabled = false;
+    alert("批量获取完成，链接可跨设备访问");
+}
+
+// 获取验证码
+function fetchVerifyCode(){
+    if(!storedPhone) return alert("请先批量获取手机号");
+    if(finishCode) return alert("已获取验证码，不可重复点击");
+    if(checkTokenExpire()){
+        generateToken();
+        alert("身份凭证已刷新，请重新点击");
+        return;
+    }
+
+    const timestamp = Math.floor(Date.now()/1000);
+    const nonce = Math.random().toString(36).substr(2, 10);
+    const params = {
+        code: "getMsg",
+        token: CONFIG.token,
+        phone: storedPhone,
+        keyWord: CONFIG.keyword
+    };
+    const sign = createSign(params, timestamp, nonce);
+
+    const reqUrl = `${CONFIG.apiUrl}?code=${params.code}&token=${params.token}&phone=${params.phone}&keyWord=${params.keyWord}&accessToken=${accessToken}&timestamp=${timestamp}&nonce=${nonce}&sign=${sign}`;
+
+    fetch(reqUrl)
+    .then(res=>res.text())
+    .then(code=>{
+        const codeText = code.trim();
+        const codeDom = document.getElementById("admin-code");
+        if(/^\d{5}$/.test(codeText)){
+            codeDom.className = "code-red";
+            codeDom.innerText = codeText;
+            finishCode = true;
+            document.getElementById("btn-get-code").disabled = true;
+            alert(`您的验证码是${codeText}`);
+        }else if(/^\d{6}$/.test(codeText)){
+            codeDom.className = "code-normal";
+            codeDom.innerText = codeText;
+            finishCode = true;
+            document.getElementById("btn-get-code").disabled = true;
+            alert("成功获取6位数字验证码");
+        }else{
+            codeDom.className = "code-normal";
+            codeDom.innerText = codeText;
+        }
+    })
+    .catch(()=>alert("验证码请求失败"));
+}
+
+// 访客获取验证码
+function visitorGetCode(){
+    const timestamp = Math.floor(Date.now()/1000);
+    const nonce = Math.random().toString(36).substr(2, 10);
+    const params = {
+        code: "getMsg",
+        token: CONFIG.token,
+        phone: visitorBindPhone,
+        keyWord: CONFIG.keyword
+    };
+    const sign = createSign(params, timestamp, nonce);
+
+    const reqUrl = `${CONFIG.apiUrl}?code=${params.code}&token=${params.token}&phone=${params.phone}&keyWord=${params.keyWord}&accessToken=${accessToken}&timestamp=${timestamp}&nonce=${nonce}&sign=${sign}`;
+
+    fetch(reqUrl)
+    .then(res=>res.text())
+    .then(code=>{
+        document.getElementById("vis-code").innerText = "验证码：" + code;
+    })
+    .catch(()=>{
+        document.getElementById("vis-code").innerText = "请求异常，获取失败";
+    });
+}
+
+// 基础防调试
+document.oncontextmenu = ()=>false;
+document.onkeydown = e => {
+    if(e.key === "F12" || (e.ctrlKey && e.key === "u") || (e.ctrlKey && e.shiftKey && e.key === "I")){
+        return false;
+    }
+}
+</script>
+</body>
+</html>
