@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>感谢使用</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f1f5f9;min-height:100vh;padding:20px}
+.card{max-width:960px;margin:40px auto;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:30px}
+h2{text-align:center;margin-bottom:24px;color:#1e293b}
+.form-item{margin-bottom:16px}
+label{display:block;font-size:14px;color:#475569;margin-bottom:6px}
+input{width:100%;height:42px;padding:0 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;outline:none}
+input:focus{border-color:#3b82f6}
+button{width:100%;height:42px;background:#3b82f6;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer;transition:background .2s}
+button:hover{background:#2563eb}
+button:disabled{background:#94a3b8;cursor:not-allowed}
+.tip{text-align:center;margin-top:12px;font-size:14px}
+.tip.error{color:#ef4444}
+.tip.warn{color:#f59e0b}
+.hidden{display:none}
+.btn-group{display:flex;gap:10px;margin-top:8px}
+.btn-group button{flex:1}
+.switch-btn{background:#64748b}
+.switch-btn:hover{background:#475569}
+.switch-btn:disabled{background:#cbd5e1}
+.project-box{border:2px solid #e2e8f0;border-radius:10px;padding:24px;background:#f8fafc;margin-top:20px}
+.project-title{font-size:20px;font-weight:600;color:#1e293b;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center}
+.key-item{display:flex;gap:8px;align-items:center;padding:6px;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:6px}
+.key-text{flex:1;font-size:13px;color:#1e293b}
+.key-copy{width:auto;padding:0 8px;height:30px;font-size:12px}
+.key-batch{background:#0ea5e9;margin-top:12px}
+.key-batch:hover{background:#0284c7}
+.user-page-box{margin-top:60px}
+.url-box{margin-top:10px;background:#eee;padding:8px;border-radius:6px;word-break:break-all}
+.clear-key{background:#f43f5e;margin-top:8px}
+.clear-key:hover{background:#e11d48}
+</style>
+</head>
+<body>
+<div id="loginBox" class="card">
+  <h2>管理员登录</h2>
+  <div class="form-item">
+    <label>账号</label>
+    <input id="usr" placeholder="请输入管理员账号">
+  </div>
+  <div class="form-item">
+    <label>密码</label>
+    <input id="pwd" type="password" placeholder="请输入管理员密码">
+  </div>
+  <button onclick="checkLogin()">登录</button>
+  <div id="loginTip" class="tip error hidden">账号密码错误</div>
+</div>
+<div id="adminPanel" class="card hidden">
+  <button class="logout-btn" onclick="logout()">退出登录</button>
+  <h2>管理后台</h2>
+  <div class="form-item">
+    <label>项目ID（sid）</label>
+    <div style="display:flex;gap:10px">
+      <input id="sidInput" value="64990" placeholder="请输入项目ID">
+      <button class="load-project-btn" onclick="loadProject()">加载项目</button>
+    </div>
+    <div class="url-box">空白访问入口（仅作参考，不能直接发给用户）：<span id="projectUserUrl"></span></div>
+  </div>
+  <div id="projectBox" class="project-box hidden">
+    <div class="project-title">
+      <span>项目ID：<span id="projectSid"></span></span>
+    </div>
+    <div style="margin-top:30px;border-top:1px solid #ddd;padding-top:20px">
+      <h3 style="margin-bottom:15px">批量生成18位项目卡密（多次生成自动合并）</h3>
+      <div class="form-item">
+        <label>单次生成卡密数量</label>
+        <input id="keyCountInput" type="number" min="1" value="5">
+      </div>
+      <button onclick="createBatchKey()" style="max-width:220px">批量生成卡密</button>
+      <button class="key-batch" onclick="copyFullShareLink()">一键复制【卡密+链接】单行格式</button>
+      <button class="clear-key" onclick="clearAllKeys()">清空全部卡密列表</button>
+      <div id="keyListBox" style="margin-top:15px;max-height:300px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+<div id="userVerifyPage" class="card card-key hidden user-page-box">
+  <h2>项目卡密验证入口</h2>
+  <div class="form-item">
+    <label>请输入18位项目使用卡密</label>
+    <input id="userKeyInput" maxlength="18" placeholder="管理员下发的18位卡密">
+  </div>
+  <button onclick="verifyUserKey()">验证卡密</button>
+  <div id="verifyTip" class="tip error hidden"></div>
+</div>
+<div id="userCodePage" class="card hidden">
+  <h2>取码页面</h2>
+  <div class="form-item">
+    <label>手机号</label>
+    <input readonly id="phoneBox" value="">
+  </div>
+  <div class="form-item">
+    <label>验证码</label>
+    <input readonly id="codeBox" placeholder="获取手机号后再取验证码">
+  </div>
+  <div class="btn-group">
+    <button id="getPhoneBtn" onclick="userGetPhone()">获取手机号</button>
+    <button id="getCodeBtn" onclick="userGetCode()" disabled>获取验证码</button>
+  </div>
+  <div id="codeTip" class="tip hidden"></div>
+</div>
+<script>
+const _k = 37;
+const _d = s => {let r="";for(let c of s)r+=String.fromCharCode(c.charCodeAt(0)^_k);return r};
+const ADMIN_USER = _d(String.fromCharCode(105,68,95,92,103,76,66,110,76,75,66));
+const ADMIN_PASS = _d(String.fromCharCode(105,68,95,92,103,76,66,110,76,75,66,20,20,17,16,20,17));
+const API_BASE = _d(String.fromCharCode(77,81,81,85,86,31,10,10,68,85,76,11,77,68,74,95,77,80,72,68,11,70,74,72,10,86,72,86,10));
+const API_TOKEN = _d(String.fromCharCode(20,23,28,18,28,67,17,64,71,68,71,18,70,67,67,67,17,20,17,71,21,65,64,16,70,16,64,67,16,70,67,19,18,65,67,17,17,20,16,70,20,68,19,21,22,67,21,18,21,16,23,23,64,64,29,70,67,67,28,17,70,23,67,64,17,67,23,18,28,22,17,21,18,71,70,22,20,23,20,18,29,67,18,67,65,70,65,65,17,71,68,18,28,22,22,22,18,23,29,28,23,16,20,67,19,19,16,65,17,22,68,19,21,23,68,70,29,16,18,22,18,68,18,68,21,23,21,68,70,23,18,71,68,23,22,21,17,65,29,65,18,23,19,23,71,70,22,22,70,23,16,20,19,71,21,29,21,67,16,18,17,64,67,16,65,68,16,23,19,67,17,19,21,29,67,20));
+let currentSid = "";
+let userCurrentPhone = "";
+let userHasCode = false;
+let tempKeyList = [];
+let shareLink = "";
+document.onkeydown = e => {
+  if(e.keyCode === 123) return false;
+  if(e.ctrlKey && e.shiftKey && e.keyCode === 73) return false;
+  if(e.ctrlKey && e.keyCode === 85) return false;
+}
+document.oncontextmenu = () => false;
+function random18Key(){
+  const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  let res = "";
+  for(let i=0;i<18;i++){
+    res += chars[Math.floor(Math.random()*chars.length)];
+  }
+  return res;
+}
+function encryptRawData(str){
+  let xor = "";
+  for(let i=0;i<str.length;i++) xor += String.fromCharCode(str.charCodeAt(i)^_k);
+  return btoa(xor).replace(/\+/g,"-").replace(/\//g,"_").replace(/=/g,"");
+}
+function decryptRawData(str){
+  try{
+    let b64 = str.replace(/-/g,"+").replace(/_/g,"/");
+    while(b64.length%4) b64+="=";
+    let xor = atob(b64);
+    let raw = "";
+    for(let i=0;i<xor.length;i++) raw += String.fromCharCode(xor.charCodeAt(i)^_k);
+    return raw;
+  }catch{return ""}
+}
+function getProjectUserUrl(sid){
+  const base = window.location.origin + window.location.pathname;
+  return `${base}#user?sid=${sid}`;
+}
+function clearAllKeys(){
+  tempKeyList = [];
+  document.getElementById("keyListBox").innerHTML = "";
+  shareLink = "";
+  alert("已清空全部卡密列表");
+}
+function createBatchKey(){
+  const num = parseInt(document.getElementById("keyCountInput").value);
+  if(num<1) return alert("请输入大于0的数量");
+  const box = document.getElementById("keyListBox");
+  const url = getProjectUserUrl(currentSid);
+  for(let i=0;i<num;i++){
+    const k = random18Key();
+    tempKeyList.push(k);
+    const item = document.createElement("div");
+    item.className = "key-item";
+    item.innerHTML = `<span class="key-text">${k}</span><button class="key-copy" onclick="copySingleKey('${k}',this)">复制卡密</button>`;
+    box.appendChild(item);
+  }
+  const raw = JSON.stringify(tempKeyList);
+  const enc = encryptRawData(raw);
+  shareLink = `${url}&kl=${enc}`;
+}
+function copySingleKey(k,btn){
+  navigator.clipboard.writeText(k).then(()=>{
+    const old = btn.innerText;
+    btn.innerText = "已复制";
+    setTimeout(()=>btn.innerText=old,1200);
+  })
+}
+function copyFullShareLink(){
+  if(!shareLink || tempKeyList.length===0) return alert("请先生成卡密列表");
+  let copyText = "";
+  tempKeyList.forEach(k=>{
+    copyText += `卡密:${k} 链接:${shareLink}\n`;
+  })
+  navigator.clipboard.writeText(copyText).then(()=>alert("复制完成，每行格式：卡密:xxx 链接:xxx"));
+}
+function checkLogin(){
+  const u = document.getElementById('usr').value.trim();
+  const p = document.getElementById('pwd').value.trim();
+  if(u === ADMIN_USER && p === ADMIN_PASS){
+    sessionStorage.setItem('isLogin', '1');
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    document.getElementById('loginTip').classList.add('hidden');
+  }else{
+    document.getElementById('loginTip').classList.remove('hidden');
+  }
+}
+function logout(){
+  sessionStorage.removeItem('isLogin');
+  location.reload();
+}
+function renderUserVerifyPage(){
+  document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"));
+  document.getElementById("userVerifyPage").classList.remove("hidden");
+}
+function verifyUserKey(){
+  const inputKey = document.getElementById("userKeyInput").value.trim();
+  const tip = document.getElementById("verifyTip");
+  tip.className = "tip error hidden";
+  const urlParams = new URLSearchParams(location.hash.replace("#user?",""));
+  const targetSid = urlParams.get("sid");
+  const encKl = urlParams.get("kl");
+  if(!targetSid || !encKl){
+    tip.classList.remove("hidden");
+    tip.innerText = "链接缺少卡密库，你打开的是空白入口，必须使用管理员生成的完整分发链接";
+    return;
+  }
+  if(inputKey.length!==18){
+    tip.classList.remove("hidden");
+    tip.innerText = "卡密必须为18位字符";
+    return;
+  }
+  const raw = decryptRawData(encKl);
+  let keyArr;
+  try{keyArr = JSON.parse(raw)}catch{
+    tip.classList.remove("hidden");
+    tip.innerText = "链接卡密数据损坏，请重新获取管理员分发链接";
+    return;
+  }
+  if(!keyArr.includes(inputKey)){
+    tip.classList.remove("hidden");
+    tip.innerText = "卡密无效，不在本次分发列表内";
+    return;
+  }
+  currentSid = targetSid;
+  userCurrentPhone = "";
+  userHasCode = false;
+  renderUserCodePage();
+}
+function renderUserCodePage(){
+  document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"));
+  document.getElementById("userCodePage").classList.remove("hidden");
+  document.getElementById("phoneBox").value = "";
+  document.getElementById("codeBox").value = "";
+  document.getElementById("getCodeBtn").disabled = true;
+  document.getElementById("codeTip").className = "tip hidden";
+}
+window.onhashchange = ()=>{
+  routeCheck();
+}
+function routeCheck(){
+  const hash = location.hash;
+  document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"));
+  if(hash.startsWith("#user")){
+    renderUserVerifyPage();
+    return;
+  }
+  if(sessionStorage.getItem('isLogin') === '1'){
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+  }else{
+    document.getElementById('loginBox').classList.remove('hidden');
+  }
+}
+window.onload = ()=>{
+  routeCheck();
+}
+function loadProject(){
+  const sid = document.getElementById('sidInput').value.trim();
+  if(!sid) return alert('请输入项目ID');
+  currentSid = sid;
+  const userUrl = getProjectUserUrl(sid);
+  document.getElementById("projectUserUrl").innerText = userUrl;
+  document.getElementById('projectSid').innerText = sid;
+  document.getElementById('projectBox').classList.remove('hidden');
+}
+async function userGetPhone(){
+  const btn = document.getElementById("getPhoneBtn");
+  const tip = document.getElementById("codeTip");
+  btn.disabled = true;
+  btn.innerText = "获取手机号中";
+  tip.className = "tip hidden";
+  try{
+    let url = `${API_BASE}?api=getPhone&token=${API_TOKEN}&sid=${currentSid}`;
+    if(currentSid === "71511"){
+      url += "&exclude=170|167|165|162";
+    }
+    const res = await fetch(url);
+    let data;
+    try{
+      data = await res.json();
+    }catch(e){
+      tip.className = "tip error";
+      tip.innerText = "接口返回数据解析失败，非标准JSON格式";
+      btn.disabled = false;
+      btn.innerText = "获取手机号";
+      return;
+    }
+    if(data.code === "0" && data.phone){
+      userCurrentPhone = data.phone;
+      document.getElementById("phoneBox").value = userCurrentPhone;
+      document.getElementById("getCodeBtn").disabled = false;
+    }else{
+      tip.className = "tip error";
+      tip.innerText = "获取号码失败：" + (data.msg || "接口返回错误信息");
+    }
+  }catch(e){
+    tip.className = "tip error";
+    tip.innerText = "网络请求异常，无法连接接口：" + e.message;
+  }finally{
+    btn.disabled = false;
+    btn.innerText = "获取手机号";
+  }
+}
+async function userGetCode(){
+  if(userHasCode) return;
+  const btn = document.getElementById("getCodeBtn");
+  const tip = document.getElementById("codeTip");
+  const codeBox = document.getElementById("codeBox");
+  const phone = userCurrentPhone;
+  btn.disabled = true;
+  btn.innerText = "获取验证码中";
+  tip.className = "tip hidden";
+  codeBox.value = "";
+  try{
+    const res = await fetch(`${API_BASE}?api=getMessage&token=${API_TOKEN}&sid=${currentSid}&phone=${phone}`);
+    let data;
+    try{
+      data = await res.json();
+    }catch(e){
+      tip.className = "tip error";
+      tip.innerText = "验证码接口数据解析失败";
+      btn.disabled = false;
+      btn.innerText = "获取验证码";
+      return;
+    }
+    if(data.code === "0"){
+      const verifyCode = data.yzm || data.sms || "";
+      if(verifyCode){
+        codeBox.value = verifyCode;
+        userHasCode = true;
+        btn.disabled = true;
+        btn.innerText = "已获取验证码，不可重复获取";
+      }else{
+        tip.className = "tip warn";
+        tip.innerText = "暂无短信验证码，等待短信推送后重试";
+      }
+    }else{
+      tip.className = "tip error";
+      tip.innerText = "获取验证码失败：" + (data.msg || "接口异常");
+    }
+  }catch(e){
+    tip.className = "tip error";
+    tip.innerText = "请求异常：" + e.message;
+  }finally{
+    if(!userHasCode){
+      btn.disabled = false;
+      btn.innerText = "获取验证码";
+    }
+  }
+}
+</script>
+</body>
+</html>
